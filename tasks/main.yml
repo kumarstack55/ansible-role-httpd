@@ -1,0 +1,43 @@
+---
+- name: Ensure packages installed
+  yum:
+    name: httpd
+  notify:
+    - Ensure httpd restarted
+
+- name: Ensure configure files exists
+  template:
+    dest: "{{ item.dest }}"
+    src: "{{
+        item.src
+        | default(
+            item.dest
+            | regex_replace('/\\.', '/dot.')
+            | regex_replace('^/', '')
+          ) + '.j2'
+      }}"
+    force: yes
+    backup: yes
+  loop:
+    - dest: /etc/httpd/conf/httpd.conf
+    - dest: /etc/httpd/conf/magic
+    - dest: /etc/httpd/conf.d/README
+    - dest: /etc/httpd/conf.d/autoindex.conf
+    - dest: /etc/httpd/conf.d/userdir.conf
+    - dest: /etc/httpd/conf.d/welcome.conf
+    - dest: /etc/httpd/conf.modules.d/00-base.conf
+    - dest: /etc/httpd/conf.modules.d/00-dav.conf
+    - dest: /etc/httpd/conf.modules.d/00-lua.conf
+    - dest: /etc/httpd/conf.modules.d/00-mpm.conf
+    - dest: /etc/httpd/conf.modules.d/00-proxy.conf
+    - dest: /etc/httpd/conf.modules.d/00-systemd.conf
+    - dest: /etc/httpd/conf.modules.d/01-cgi.conf
+  notify:
+    - Ensure httpd restarted
+
+- name: Ensure service enabled
+  systemd:
+    name: httpd.service
+    enabled: yes
+  notify:
+    - Ensure httpd restarted
